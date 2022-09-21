@@ -40,19 +40,21 @@ pipeline {
             }
         stage('SonarQube - SAST') {
               steps {
-              withSonarQubeEnv(credentialsId: 'sonarQube', variable: 'key', installationName:'SonarQube'){
-
+              withSonarQubeEnv('SonarQube'){
+              withCredentials([string(credentialsId: 'sonarQube', variable: 'key')]){
                 sh "mvn sonar:sonar \
                       -Dsonar.projectKey=numeric-application \
                       -Dsonar.host.url=http://devsecops-demo.northeurope.cloudapp.azure.com:9000 \
                       -Dsonar.login=${key}"
+                       timeout(time: 2, unit: 'MINUTES') {
+                                                 script {
+                                                   waitForQualityGate abortPipeline: true
+                                                 }
+                                               }
+
+              }
 
 
-                 timeout(time: 2, unit: 'MINUTES') {
-                           script {
-                             waitForQualityGate abortPipeline: true
-                           }
-                         }
                 }
             }
            }
