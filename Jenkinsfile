@@ -46,8 +46,7 @@ pipeline {
                       -Dsonar.host.url=http://devsecops-demo.northeurope.cloudapp.azure.com:9000 \
                       -Dsonar.login=${key}"
               }
-              steps {
-                 withSonarQubeEnv('SonarQube'){
+              withSonarQubeEnv('SonarQube'){
                  timeout(time: 2, unit: 'MINUTES') {
                            script {
                              waitForQualityGate abortPipeline: true
