@@ -40,10 +40,11 @@ pipeline {
             }
         stage('SonarQube - SAST') {
               steps {
+              withCredentials([string(credentialsId: 'sonarQube', variable: 'key')])
                 sh "mvn sonar:sonar \
                       -Dsonar.projectKey=numeric-application \
                       -Dsonar.host.url=http://devsecops-demo.northeurope.cloudapp.azure.com:9000 \
-                      -Dsonar.login=2d4e2e48846a42d2c3ea59d205ca92fab68c6e50"
+                      -Dsonar.login=${key}"
               }
             }
         stage('Kubernetes Deployment - DEV') {
