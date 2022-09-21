@@ -52,6 +52,16 @@ pipeline {
                    }
                 }
             }
+            stage('Dependency Scan - Docker ') {
+              steps {
+                sh "mvn dependency-check:check"
+              }
+              post {
+                always {
+                  dependencyCheckPublisher pattern: 'target/dependency-check-report.xml'
+                }
+              }
+            }
 
         stage('Kubernetes Deployment - DEV') {
               steps {
