@@ -14,15 +14,7 @@ pipeline {
           }
 
         }
-        stage('Docker Build and Push') {
-          steps {
-            withDockerRegistry([credentialsId: "docker-hub", url: ""]) {
-              sh 'printenv'
-              sh 'docker build -t rahul28/numeric-app:""$GIT_COMMIT"" .'
-              sh 'docker push rahul28/numeric-app:""$GIT_COMMIT""'
-            }
-          }
-        }
+
         stage('Mutation Tests - PIT') {
               steps {
                 sh "mvn org.pitest:pitest-maven:mutationCoverage"
@@ -57,6 +49,16 @@ pipeline {
                           sh "bash trivy-docker-image-scan.sh"
                       }
               )
+          }
+      }
+
+      stage('Docker Build and Push') {
+          steps {
+              withDockerRegistry([credentialsId: "docker-hub", url: ""]) {
+                  sh 'printenv'
+                  sh 'docker build -t rahul28/numeric-app:""$GIT_COMMIT"" .'
+                  sh 'docker push rahul28/numeric-app:""$GIT_COMMIT""'
+              }
           }
       }
 
