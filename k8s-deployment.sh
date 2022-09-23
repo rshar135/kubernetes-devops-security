@@ -13,5 +13,5 @@
 #    echo "image name - ${imageName}"
 #    kubectl -n default set image deploy ${deploymentName} ${containerName}=${imageName} --record=true
 #fi
-
+sed -i 's#replace#rahul28/numeric-app:${GIT_COMMIT}#g' k8s_deployment_service.yaml
 kubectl -n default apply -f k8s_deployment_service.yaml
