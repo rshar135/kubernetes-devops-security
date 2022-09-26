@@ -12,38 +12,38 @@ pipeline {
 
   stages {
       stage('Build Artifact') {
-            steps {
+          steps {
               sh "mvn clean package -DskipTests=true"
               archive 'target/*.jar'
-            }
-        }
-        stage('Unit Tests - JUnit and Jacoco') {
+          }
+      }
+      stage('Unit Tests - JUnit and Jacoco') {
           steps {
-            sh "mvn test"
+              sh "mvn test"
           }
 
-        }
+      }
 
-        stage('Mutation Tests - PIT') {
-              steps {
-                sh "mvn org.pitest:pitest-maven:mutationCoverage"
-              }
-            }
-        stage('SonarQube - SAST') {
-              steps {
-              withSonarQubeEnv('SonarQube'){
-                sh "mvn sonar:sonar \
+      stage('Mutation Tests - PIT') {
+          steps {
+              sh "mvn org.pitest:pitest-maven:mutationCoverage"
+          }
+      }
+      stage('SonarQube - SAST') {
+          steps {
+              withSonarQubeEnv('SonarQube') {
+                  sh "mvn sonar:sonar \
                       -Dsonar.projectKey=numeric-application \
                       -Dsonar.host.url=http://devsecops-demo.northeurope.cloudapp.azure.com:9000"
-                      }
-                       timeout(time: 2, unit: 'MINUTES') {
-                                                 script {
-                                                   waitForQualityGate abortPipeline: true
-                        }
-                   }
-                }
-            }
-            /*stage('Dependency Scan') {
+              }
+              timeout(time: 2, unit: 'MINUTES') {
+                  script {
+                      waitForQualityGate abortPipeline: true
+                  }
+              }
+          }
+      }
+      /*stage('Dependency Scan') {
               steps {
                 sh "mvn dependency-check:check"
               }
@@ -115,37 +115,56 @@ pipeline {
               )
           }
       }
-          stage('Integration Tests - DEV') {
-              steps {
-                  script {
-                      try {
-                          withKubeConfig([credentialsId: 'kubeconfig']) {
-                              sh "bash integration-test.sh"
-                          }
-                      } catch (e) {
-                          withKubeConfig([credentialsId: 'kubeconfig']) {
-                              sh "kubectl -n default rollout undo deploy ${deploymentName}"
-                          }
-                          throw e
+      stage('Integration Tests - DEV') {
+          steps {
+              script {
+                  try {
+                      withKubeConfig([credentialsId: 'kubeconfig']) {
+                          sh "bash integration-test.sh"
                       }
-                  }
-              }
-          }
-          stage('OWASP ZAP - DAST') {
-              steps {
-                  withKubeConfig([credentialsId: 'kubeconfig']) {
-                      sh 'bash zap.sh'
-                  }
-              }
-          }
-          stage('Prompte to PROD?') {
-              steps {
-                  timeout(time: 2, unit: 'DAYS') {
-                      input 'Do you want to Approve the Deployment to Production Environment/Namespace?'
+                  } catch (e) {
+                      withKubeConfig([credentialsId: 'kubeconfig']) {
+                          sh "kubectl -n default rollout undo deploy ${deploymentName}"
+                      }
+                      throw e
                   }
               }
           }
       }
+      stage('OWASP ZAP - DAST') {
+          steps {
+              withKubeConfig([credentialsId: 'kubeconfig']) {
+                  sh 'bash zap.sh'
+              }
+          }
+      }
+      stage('Prompte to PROD?') {
+          steps {
+              timeout(time: 2, unit: 'DAYS') {
+                  input 'Do you want to Approve the Deployment to Production Environment/Namespace?'
+              }
+          }
+      }
+      stage('K8S CIS Benchmark') {
+          steps {
+              script {
+
+                  parallel(
+                          "Master": {
+                              sh "bash cis-master.sh"
+                          },
+                          "Etcd": {
+                              sh "bash cis-etcd.sh"
+                          },
+                          "Kubelet": {
+                              sh "bash cis-kubelet.sh"
+                          }
+                  )
+
+              }
+          }
+      }
+  }
         post {
             always {
                 junit 'target/surefire-reports/*.xml'
