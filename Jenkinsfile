@@ -6,7 +6,7 @@ pipeline {
         containerName = "devsecops-container"
         serviceName = "devsecops-svc"
         imageName = "rahul28/numeric-app:${GIT_COMMIT}"
-        applicationURL = "http://devsecops-demo.northeurope.cloudapp.azure.com"
+        applicationURL = "http://my-devsecops-demo.northeurope.cloudapp.azure.com"
         applicationURI = "/increment/99"
     }
 
@@ -34,7 +34,7 @@ pipeline {
               withSonarQubeEnv('SonarQube') {
                   sh "mvn sonar:sonar \
                       -Dsonar.projectKey=numeric-application \
-                      -Dsonar.host.url=http://devsecops-demo.northeurope.cloudapp.azure.com:9000"
+                      -Dsonar.host.url=http://my-devsecops-demo.northeurope.cloudapp.azure.com:9000"
               }
               timeout(time: 2, unit: 'MINUTES') {
                   script {
