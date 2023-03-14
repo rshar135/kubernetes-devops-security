@@ -36,7 +36,7 @@ pipeline {
                       -Dsonar.projectKey=numeric-application \
                       -Dsonar.host.url=http://localhost:9000/"
               }
-              timeout(time: 5, unit: 'MINUTES') {
+              timeout(time: 2, unit: 'MINUTES') {
                   script {
                       waitForQualityGate abortPipeline: true
                   }
